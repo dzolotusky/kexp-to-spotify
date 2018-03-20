@@ -17,7 +17,7 @@ parser.add_argument('--output_dir', type=str, default='output')
 
 #21 is UTC for 2 PM in Seattle now (it'll be 22 later when Seattle is 8 behind and not 7)
 PLAY_URL = 'https://legacy-api.kexp.org/play/?limit=200&end_time={}&ordering=-airdate&channel=1'
-SHOW_URL = 'http://cache.kexp.org/cache/showById?id='
+SHOW_URL = 'https://legacy-api.kexp.org/show/?showid='
 
 def make_url(time) -> str:
     """create the URL to get all the plays for a single date"""
@@ -42,7 +42,7 @@ def scrape_date(time, output_dir: str):
 def no_john_or_cheryl(cur_show):
     no_john = True;
     show_response = requests.get(SHOW_URL + str(cur_show))
-    shows = show_response.json()['Shows']
+    shows = show_response.json()['results']
     if (len(shows) < 1):
         print("Play with less than 1 show")
         return False
@@ -50,17 +50,17 @@ def no_john_or_cheryl(cur_show):
         print("Play with multiple shows")
         return False
 
-    cur_show_name = shows[0]["Program"]["Name"]
+    cur_show_name = shows[0]["program"]["name"]
 
-    hosts = shows[0]['ShowHosts']
-    print ("show = " + shows[0]["Program"]["Name"])
+    hosts = shows[0]['hosts']
+    print ("show = " + shows[0]["program"]["name"])
 
     if cur_show_name == "Street Sounds":
         return False
 
     for host in hosts:
-        print("host = " + host['Host']['Name'])
-        is_john = host['Host']['Name'] == "John Richards" or host['Host']['Name'] == "Cheryl Waters"
+        print("host = " + host['name'])
+        is_john = host['name'] == "John Richards" or host['name'] == "Cheryl Waters"
         no_john = no_john and not is_john
 
     return no_john
@@ -116,12 +116,12 @@ if __name__ == "__main__":
                     print("Show without John or Cheryl: " + str(cur_show))
                 else:
                     show_response = requests.get(SHOW_URL + str(cur_show))
-                    shows = show_response.json()['Shows']
-                    cur_show_name = shows[0]["Program"]["Name"] + ' ' + date
+                    shows = show_response.json()['results']
+                    cur_show_name = shows[0]["program"]["name"] + ' ' + date
                     if not cur_show_name in playlists:
                         playlists[cur_show_name] = []
-                    hosts = shows[0]['ShowHosts']
-                    print("Show with " + hosts[0]['Host']['Name'] + " " + str(cur_show))
+                    hosts = shows[0]['hosts']
+                    print("Show with " + hosts[0]['name'] + " " + str(cur_show))
 
                 if prev_show == 0:
                     assert(no_john)
